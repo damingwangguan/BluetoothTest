@@ -17,6 +17,7 @@ public class App extends Application {
 
     public static BluetoothLeService mBluetoothLeService;
     public static boolean mConnected = false;
+    public static boolean isConnecting = false;
 
 
     @Override
