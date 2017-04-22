@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.wakeup.bluetoothtest;
+package com.guangyao.bluetoothtest;
 
 import java.util.HashMap;
 

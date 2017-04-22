@@ -1,4 +1,4 @@
-package com.wakeup.bluetoothtest.activity;
+package com.guangyao.bluetoothtest.activity;
 
 import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
@@ -17,8 +17,8 @@ import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.Toast;
 
-import com.wakeup.bluetoothtest.R;
-import com.wakeup.bluetoothtest.adapter.LeDeviceListAdapter;
+import com.guangyao.bluetoothtest.adapter.LeDeviceListAdapter;
+import com.guangyao.bluetoothtest.R;
 
 import java.util.ArrayList;
 
@@ -45,14 +45,14 @@ public class DeviceScanActivity extends AppCompatActivity {
         context=this;
         mHandler = new Handler();
 
-        getSupportActionBar().setTitle("设备列表");
+        getSupportActionBar().setTitle(R.string.device_list);
         listView = (ListView) findViewById(R.id.listview);
 
         BluetoothManager bluetoothManager = (BluetoothManager)getSystemService(Context.BLUETOOTH_SERVICE);
         bluetoothAdapter = bluetoothManager.getAdapter();
 
         if (bluetoothAdapter ==null) {
-            Toast.makeText(this,"不支持蓝牙",Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, R.string.not_support,Toast.LENGTH_SHORT).show();
             finish();
             return;
         }

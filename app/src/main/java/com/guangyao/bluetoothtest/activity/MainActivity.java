@@ -1,4 +1,4 @@
-package com.wakeup.bluetoothtest.activity;
+package com.guangyao.bluetoothtest.activity;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -13,9 +13,9 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.TextView;
 
-import com.wakeup.bluetoothtest.App;
-import com.wakeup.bluetoothtest.R;
-import com.wakeup.bluetoothtest.service.BluetoothLeService;
+import com.guangyao.bluetoothtest.App;
+import com.guangyao.bluetoothtest.service.BluetoothLeService;
+import com.guangyao.bluetoothtest.R;
 
 public class MainActivity extends AppCompatActivity {
 

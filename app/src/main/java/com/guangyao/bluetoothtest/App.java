@@ -1,4 +1,4 @@
-package com.wakeup.bluetoothtest;
+package com.guangyao.bluetoothtest;
 
 import android.app.Application;
 import android.content.ComponentName;
@@ -7,7 +7,8 @@ import android.content.ServiceConnection;
 import android.os.IBinder;
 import android.util.Log;
 
-import com.wakeup.bluetoothtest.service.BluetoothLeService;
+import com.guangyao.bluetoothtest.service.BluetoothLeService;
+
 
 /**
  * Created by liuqiong on 2017/4/22.

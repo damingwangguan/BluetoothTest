@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.wakeup.bluetoothtest">
+    package="com.guangyao.bluetoothtest">
     <uses-permission android:name="android.permission.BLUETOOTH"/>
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN"/>
     <application
@@ -19,7 +19,7 @@
             </intent-filter>
         </activity>
         <activity android:name=".activity.DeviceScanActivity"/>
-        <service android:name="com.wakeup.bluetoothtest.service.BluetoothLeService" android:enabled="true"/>
+        <service android:name=".service.BluetoothLeService" android:enabled="true"/>
         <activity android:name=".activity.TestActivity"/>
     </application>
 

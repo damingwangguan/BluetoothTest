@@ -7,5 +7,7 @@
     <string name="re_search">重搜</string>
     <string name="sort">排序</string>
     <string name="stop">停止</string>
+    <string name="device_list">设备列表</string>
+    <string name="not_support">不支持蓝牙</string>
 
 </resources>

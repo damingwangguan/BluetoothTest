@@ -1,10 +1,10 @@
-package com.wakeup.bluetoothtest.activity;
+package com.guangyao.bluetoothtest.activity;
 
 import android.app.Activity;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 
-import com.wakeup.bluetoothtest.R;
+import com.guangyao.bluetoothtest.R;
 
 /**
  * Created by liuqiong on 2017/4/22.
