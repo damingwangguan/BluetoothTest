@@ -1,4 +1,4 @@
-package com.wakeup.bluetoothtest;
+package com.wakeup.bluetoothtest.activity;
 
 import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
@@ -12,12 +12,16 @@ import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.Toast;
 
+import com.wakeup.bluetoothtest.R;
+import com.wakeup.bluetoothtest.adapter.LeDeviceListAdapter;
+
 import java.util.ArrayList;
 
-import adapter.LeDeviceListAdapter;
 
 /**
  * Created by liuqiong on 2017/4/21.
@@ -53,7 +57,25 @@ public class DeviceScanActivity extends AppCompatActivity {
             return;
         }
 
+        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+                BluetoothDevice device = mLeDeviceListAdapter.getDevice(i);
+                if (device==null) {
+                    return;
+                }
+                Intent intent = new Intent();
+                intent.putExtra("address",device.getAddress());
+                setResult(RESULT_OK,intent);
+                if (mScanning) {
+                    bluetoothAdapter.stopLeScan(mLeScanCallback);
+                    mScanning = false;
+                }
 
+                finish();
+
+            }
+        });
     }
 
     @Override
@@ -68,6 +90,9 @@ public class DeviceScanActivity extends AppCompatActivity {
         bluetoothDevices = new ArrayList<>();
         mLeDeviceListAdapter = new LeDeviceListAdapter(context, bluetoothDevices);
         listView.setAdapter(mLeDeviceListAdapter);
+
+
+
 
         scanLeDevice(true);
 
@@ -139,6 +164,11 @@ public class DeviceScanActivity extends AppCompatActivity {
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()){
             case R.id.re_search:
+                if (!bluetoothAdapter.isEnabled()) {
+                    Intent intent = new Intent(bluetoothAdapter.ACTION_REQUEST_ENABLE);
+                    startActivityForResult(intent,REQUEST_ENABLE_BT);
+                }
+
                 mLeDeviceListAdapter.clear();
                 scanLeDevice(true);
                 break;

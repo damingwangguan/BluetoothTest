@@ -1,4 +1,4 @@
-package adapter;
+package com.wakeup.bluetoothtest.adapter;
 
 import android.bluetooth.BluetoothDevice;
 import android.content.Context;
