@@ -5,5 +5,5 @@
         android:id="@+id/search_ble"
         android:orderInCategory="99"
         android:title="搜索"
-        app:showAsAction="never" />
+        app:showAsAction="ifRoom" />
 </menu>
