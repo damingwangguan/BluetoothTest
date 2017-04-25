@@ -27,6 +27,7 @@ import android.widget.Toast;
 
 import com.guangyao.bluetoothtest.R;
 import com.guangyao.bluetoothtest.adapter.LeDeviceListAdapter;
+import com.guangyao.bluetoothtest.bean.DeviceBean;
 
 import java.util.ArrayList;
 
@@ -41,7 +42,7 @@ public class DeviceScanActivity extends AppCompatActivity {
     private static final int REQUEST_ENABLE_BT = 1;
     private Context context;
     private ListView listView;
-    private ArrayList<BluetoothDevice> bluetoothDevices;
+    private ArrayList<DeviceBean> deviceBeens;
     private Handler mHandler;
     private boolean mScanning;
     private static final long SCAN_PERIOD = 10000;
@@ -120,8 +121,8 @@ public class DeviceScanActivity extends AppCompatActivity {
             startActivityForResult(intent, REQUEST_ENABLE_BT);
         }
 
-        bluetoothDevices = new ArrayList<>();
-        mLeDeviceListAdapter = new LeDeviceListAdapter(context, bluetoothDevices);
+        deviceBeens = new ArrayList<>();
+        mLeDeviceListAdapter = new LeDeviceListAdapter(context, deviceBeens);
         listView.setAdapter(mLeDeviceListAdapter);
 
 
@@ -162,10 +163,14 @@ public class DeviceScanActivity extends AppCompatActivity {
     private BluetoothAdapter.LeScanCallback mLeScanCallback = new BluetoothAdapter.LeScanCallback() {
 
         @Override
-        public void onLeScan(final BluetoothDevice bluetoothDevice, int i, byte[] bytes) {
+        public void onLeScan(final BluetoothDevice bluetoothDevice, final int i, byte[] bytes) {
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
+                    DeviceBean deviceBean = new DeviceBean();
+                    deviceBean.setDevice(bluetoothDevice);
+                    deviceBean.setRssi(i);
+                    mLeDeviceListAdapter.addDevice(deviceBean);
                     mLeDeviceListAdapter.addDevice(bluetoothDevice);
                     mLeDeviceListAdapter.notifyDataSetChanged();
                 }
@@ -206,6 +211,10 @@ public class DeviceScanActivity extends AppCompatActivity {
                 break;
 
             case R.id.sort:
+                mLeDeviceListAdapter.sort();
+                mLeDeviceListAdapter.notifyDataSetChanged();
+
+
                 break;
             case R.id.stop:
                 scanLeDevice(false);

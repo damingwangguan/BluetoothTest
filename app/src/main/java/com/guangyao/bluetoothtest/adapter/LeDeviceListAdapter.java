@@ -2,6 +2,7 @@ package com.guangyao.bluetoothtest.adapter;
 
 import android.bluetooth.BluetoothDevice;
 import android.content.Context;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -9,6 +10,7 @@ import android.widget.BaseAdapter;
 import android.widget.TextView;
 
 import com.guangyao.bluetoothtest.R;
+import com.guangyao.bluetoothtest.bean.DeviceBean;
 
 import java.util.ArrayList;
 
@@ -19,38 +21,62 @@ import java.util.ArrayList;
      // Adapter for holding devices found through scanning.
  public class LeDeviceListAdapter extends BaseAdapter {
     private ArrayList<BluetoothDevice> mLeDevices;
-    private LayoutInflater mInflator;
+    private ArrayList<DeviceBean> deviceBeens;
     private Context context;
+    private DeviceBean deviceBean;
 
-    public LeDeviceListAdapter(Context context, ArrayList<BluetoothDevice> bluetoothDevices) {
+    public LeDeviceListAdapter(Context context, ArrayList<DeviceBean> deviceBeens) {
         super();
-        this.mLeDevices =bluetoothDevices;
+        this.mLeDevices=new ArrayList<>();
+        this.deviceBeens =deviceBeens;
         this.context=context;
 
     }
 
-    public void addDevice(BluetoothDevice device) {
-        if(!mLeDevices.contains(device)) {
-            mLeDevices.add(device);
+    public void addDevice(DeviceBean deviceBean) {
+        if (!mLeDevices.contains(deviceBean.getDevice())) {
+            deviceBeens.add(deviceBean);
         }
+
+    } public void addDevice(BluetoothDevice deviceBean) {
+        if (!mLeDevices.contains(deviceBean)) {
+            mLeDevices.add(deviceBean);
+        }
+
     }
 
     public BluetoothDevice getDevice(int position) {
-        return mLeDevices.get(position);
+        return deviceBeens.get(position).getDevice();
     }
 
     public void clear() {
+        deviceBeens.clear();
         mLeDevices.clear();
+    }
+
+    public void sort() {
+        Log.d("zgy", "sort: ");
+
+        for (int i = 0; i < deviceBeens.size(); i++) {
+            for (int j = i+1; j < deviceBeens.size(); j++) {
+                if(deviceBeens.get(i).getRssi()<deviceBeens.get(j).getRssi()){
+                    deviceBean=deviceBeens.get(i);
+                    deviceBeens.set(i,deviceBeens.get(j));
+                    deviceBeens.set(j,deviceBean);
+                }
+            }
+        }
+
     }
 
     @Override
     public int getCount() {
-        return mLeDevices.size();
+        return deviceBeens.size();
     }
 
     @Override
     public Object getItem(int i) {
-        return mLeDevices.get(i);
+        return deviceBeens.get(i);
     }
 
     @Override
@@ -67,18 +93,22 @@ import java.util.ArrayList;
             viewHolder = new ViewHolder();
             viewHolder.deviceAddress = (TextView) view.findViewById(R.id.device_address);
             viewHolder.deviceName = (TextView) view.findViewById(R.id.device_name);
+            viewHolder.rssi = (TextView) view.findViewById(R.id.rssi);
+            viewHolder.id = (TextView) view.findViewById(R.id.id);
             view.setTag(viewHolder);
         } else {
             viewHolder = (ViewHolder) view.getTag();
         }
 
-        BluetoothDevice device = mLeDevices.get(i);
+        BluetoothDevice device = deviceBeens.get(i).getDevice();
         final String deviceName = device.getName();
         if (deviceName != null && deviceName.length() > 0)
             viewHolder.deviceName.setText(deviceName);
         else
             viewHolder.deviceName.setText(R.string.unknown_device);
         viewHolder.deviceAddress.setText(device.getAddress());
+        viewHolder.rssi.setText(String.valueOf(deviceBeens.get(i).getRssi()));
+        viewHolder.id.setText(String.valueOf(i+1)+".");
 
         return view;
     }
@@ -86,5 +116,7 @@ import java.util.ArrayList;
     static class ViewHolder {
         TextView deviceName;
         TextView deviceAddress;
+        TextView rssi;
+        TextView id;
     }
 }
