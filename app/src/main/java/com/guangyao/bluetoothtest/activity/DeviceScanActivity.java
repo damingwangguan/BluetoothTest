@@ -1,15 +1,23 @@
 package com.guangyao.bluetoothtest.activity;
 
+import android.Manifest;
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothManager;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.annotation.RequiresApi;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -17,8 +25,8 @@ import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.Toast;
 
-import com.guangyao.bluetoothtest.adapter.LeDeviceListAdapter;
 import com.guangyao.bluetoothtest.R;
+import com.guangyao.bluetoothtest.adapter.LeDeviceListAdapter;
 
 import java.util.ArrayList;
 
@@ -37,36 +45,40 @@ public class DeviceScanActivity extends AppCompatActivity {
     private Handler mHandler;
     private boolean mScanning;
     private static final long SCAN_PERIOD = 10000;
+    private static final int PERMISSION_REQUEST_COARSE_LOCATION = 1;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_device);
-        context=this;
+        context = this;
         mHandler = new Handler();
 
         getSupportActionBar().setTitle(R.string.device_list);
         listView = (ListView) findViewById(R.id.listview);
 
-        BluetoothManager bluetoothManager = (BluetoothManager)getSystemService(Context.BLUETOOTH_SERVICE);
+        BluetoothManager bluetoothManager = (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
         bluetoothAdapter = bluetoothManager.getAdapter();
 
-        if (bluetoothAdapter ==null) {
-            Toast.makeText(this, R.string.not_support,Toast.LENGTH_SHORT).show();
+        if (bluetoothAdapter == null) {
+            Toast.makeText(this, R.string.not_support, Toast.LENGTH_SHORT).show();
             finish();
             return;
         }
+
+        initPermission();
+
 
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
                 BluetoothDevice device = mLeDeviceListAdapter.getDevice(i);
-                if (device==null) {
+                if (device == null) {
                     return;
                 }
                 Intent intent = new Intent();
-                intent.putExtra("address",device.getAddress());
-                setResult(RESULT_OK,intent);
+                intent.putExtra("address", device.getAddress());
+                setResult(RESULT_OK, intent);
                 if (mScanning) {
                     bluetoothAdapter.stopLeScan(mLeScanCallback);
                     mScanning = false;
@@ -78,13 +90,34 @@ public class DeviceScanActivity extends AppCompatActivity {
         });
     }
 
+
+    private void initPermission() {
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            if (context.checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                final AlertDialog.Builder builder = new AlertDialog.Builder(this);
+                builder.setTitle(R.string.need_location);
+                builder.setMessage(R.string.location_warn);
+                builder.setPositiveButton(android.R.string.ok, null);
+                builder.setOnDismissListener(new DialogInterface.OnDismissListener() {
+                    @RequiresApi(api = Build.VERSION_CODES.M)
+                    @Override
+                    public void onDismiss(DialogInterface dialogInterface) {
+                        requestPermissions(new String[]{Manifest.permission.ACCESS_COARSE_LOCATION}, PERMISSION_REQUEST_COARSE_LOCATION);
+                    }
+                });
+                builder.show();
+            }
+        }
+    }
+
     @Override
     protected void onResume() {
         super.onResume();
 
         if (!bluetoothAdapter.isEnabled()) {
             Intent intent = new Intent(bluetoothAdapter.ACTION_REQUEST_ENABLE);
-            startActivityForResult(intent,REQUEST_ENABLE_BT);
+            startActivityForResult(intent, REQUEST_ENABLE_BT);
         }
 
         bluetoothDevices = new ArrayList<>();
@@ -92,12 +125,11 @@ public class DeviceScanActivity extends AppCompatActivity {
         listView.setAdapter(mLeDeviceListAdapter);
 
 
-
-
         scanLeDevice(true);
 
 
     }
+
     private void scanLeDevice(final boolean enable) {
         if (enable) {
             // Stops scanning after a pre-defined scan period.
@@ -127,7 +159,7 @@ public class DeviceScanActivity extends AppCompatActivity {
         mLeDeviceListAdapter.clear();
     }
 
-    private BluetoothAdapter.LeScanCallback mLeScanCallback=new BluetoothAdapter.LeScanCallback(){
+    private BluetoothAdapter.LeScanCallback mLeScanCallback = new BluetoothAdapter.LeScanCallback() {
 
         @Override
         public void onLeScan(final BluetoothDevice bluetoothDevice, int i, byte[] bytes) {
@@ -143,7 +175,7 @@ public class DeviceScanActivity extends AppCompatActivity {
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.device_list,menu);
+        getMenuInflater().inflate(R.menu.device_list, menu);
 
         if (!mScanning) {
             menu.findItem(R.id.stop).setVisible(false);
@@ -162,11 +194,11 @@ public class DeviceScanActivity extends AppCompatActivity {
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()){
+        switch (item.getItemId()) {
             case R.id.re_search:
                 if (!bluetoothAdapter.isEnabled()) {
                     Intent intent = new Intent(bluetoothAdapter.ACTION_REQUEST_ENABLE);
-                    startActivityForResult(intent,REQUEST_ENABLE_BT);
+                    startActivityForResult(intent, REQUEST_ENABLE_BT);
                 }
 
                 mLeDeviceListAdapter.clear();
@@ -189,9 +221,36 @@ public class DeviceScanActivity extends AppCompatActivity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode==REQUEST_ENABLE_BT&&resultCode== Activity.RESULT_CANCELED){
+        if (requestCode == REQUEST_ENABLE_BT && resultCode == Activity.RESULT_CANCELED) {
             finish();
             return;
+        }
+    }
+
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+
+        switch (requestCode) {
+            case PERMISSION_REQUEST_COARSE_LOCATION:
+                if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    Log.d("zgy", "coarse location permission granted");
+
+                } else {
+                    final AlertDialog.Builder builder = new AlertDialog.Builder(this);
+                    builder.setTitle(R.string.function_limited);
+                    builder.setMessage(R.string.location_refused);
+                    builder.setPositiveButton(android.R.string.ok, null);
+                    builder.setOnDismissListener(new DialogInterface.OnDismissListener() {
+                        @Override
+                        public void onDismiss(DialogInterface dialog) {
+                        }
+                    });
+                    builder.show();
+                }
+
+                break;
         }
     }
 }

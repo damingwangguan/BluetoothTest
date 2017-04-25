@@ -10,5 +10,9 @@
     <string name="stop">停止</string>
     <string name="device_list">设备列表</string>
     <string name="not_support">不支持蓝牙</string>
+    <string name="need_location">需要位置权限</string>
+    <string name="location_warn">请允许获取位置信息，否则将会导致部分功能无法正常运行！</string>
+    <string name="function_limited">功能受限</string>
+    <string name="location_refused">由于访问位置的权限没有被授予，该应用程序的部分功能将受到限制。</string>
 
 </resources>
