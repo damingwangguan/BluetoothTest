@@ -66,10 +66,10 @@ public class MainActivity extends AppCompatActivity {
 
         }
 
-        if (!App.isConnecting){
+        if (!App.isConnecting) {
             menu.findItem(R.id.menu_refresh).setActionView(
-                   null);
-        }else {
+                    null);
+        } else {
             menu.findItem(R.id.menu_refresh).setActionView(
                     R.layout.actionbar_indeterminate_progress);
         }
@@ -90,7 +90,7 @@ public class MainActivity extends AppCompatActivity {
 
                 App.mBluetoothLeService.disconnect();
 
-                Log.i("zgy","disconnect_ble");
+                Log.i("zgy", "disconnect_ble");
                 break;
 
         }
@@ -106,7 +106,7 @@ public class MainActivity extends AppCompatActivity {
                 Log.i("zgy", address);
 
                 App.mBluetoothLeService.connect(address);
-                App.isConnecting=true;
+                App.isConnecting = true;
                 invalidateOptionsMenu();
             }
 
@@ -126,7 +126,7 @@ public class MainActivity extends AppCompatActivity {
             String action = intent.getAction();
             if (BluetoothLeService.ACTION_GATT_CONNECTED.equals(action)) {
                 App.mConnected = true;
-                App.isConnecting=false;
+                App.isConnecting = false;
 
                 //todo 更改界面ui
                 invalidateOptionsMenu();//更新菜单栏

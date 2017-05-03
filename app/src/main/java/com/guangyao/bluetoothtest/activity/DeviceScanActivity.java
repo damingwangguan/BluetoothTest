@@ -47,6 +47,7 @@ public class DeviceScanActivity extends AppCompatActivity {
     private boolean mScanning;
     private static final long SCAN_PERIOD = 10000;
     private static final int PERMISSION_REQUEST_COARSE_LOCATION = 1;
+    private Runnable runnable;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -84,7 +85,6 @@ public class DeviceScanActivity extends AppCompatActivity {
                     bluetoothAdapter.stopLeScan(mLeScanCallback);
                     mScanning = false;
                 }
-
                 finish();
 
             }
@@ -115,7 +115,6 @@ public class DeviceScanActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-
         if (!bluetoothAdapter.isEnabled()) {
             Intent intent = new Intent(bluetoothAdapter.ACTION_REQUEST_ENABLE);
             startActivityForResult(intent, REQUEST_ENABLE_BT);
@@ -125,10 +124,7 @@ public class DeviceScanActivity extends AppCompatActivity {
         mLeDeviceListAdapter = new LeDeviceListAdapter(context, deviceBeens);
         listView.setAdapter(mLeDeviceListAdapter);
 
-
         scanLeDevice(true);
-
-
     }
 
     private void scanLeDevice(final boolean enable) {
@@ -205,20 +201,16 @@ public class DeviceScanActivity extends AppCompatActivity {
                     Intent intent = new Intent(bluetoothAdapter.ACTION_REQUEST_ENABLE);
                     startActivityForResult(intent, REQUEST_ENABLE_BT);
                 }
-
                 mLeDeviceListAdapter.clear();
                 scanLeDevice(true);
                 break;
-
             case R.id.sort:
                 mLeDeviceListAdapter.sort();
                 mLeDeviceListAdapter.notifyDataSetChanged();
-
-
                 break;
             case R.id.stop:
+                mHandler.removeCallbacks(runnable);
                 scanLeDevice(false);
-
                 break;
         }
 

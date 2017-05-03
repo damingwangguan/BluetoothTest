@@ -18,8 +18,8 @@ import java.util.ArrayList;
  * Created by liuqiong on 2017/4/22.
  */
 
-     // Adapter for holding devices found through scanning.
- public class LeDeviceListAdapter extends BaseAdapter {
+// Adapter for holding devices found through scanning.
+public class LeDeviceListAdapter extends BaseAdapter {
     private ArrayList<BluetoothDevice> mLeDevices;
     private ArrayList<DeviceBean> deviceBeens;
     private Context context;
@@ -27,9 +27,9 @@ import java.util.ArrayList;
 
     public LeDeviceListAdapter(Context context, ArrayList<DeviceBean> deviceBeens) {
         super();
-        this.mLeDevices=new ArrayList<>();
-        this.deviceBeens =deviceBeens;
-        this.context=context;
+        this.mLeDevices = new ArrayList<>();
+        this.deviceBeens = deviceBeens;
+        this.context = context;
 
     }
 
@@ -38,7 +38,9 @@ import java.util.ArrayList;
             deviceBeens.add(deviceBean);
         }
 
-    } public void addDevice(BluetoothDevice deviceBean) {
+    }
+
+    public void addDevice(BluetoothDevice deviceBean) {
         if (!mLeDevices.contains(deviceBean)) {
             mLeDevices.add(deviceBean);
         }
@@ -50,19 +52,19 @@ import java.util.ArrayList;
     }
 
     public void clear() {
-        deviceBeens.clear();
         mLeDevices.clear();
+        deviceBeens.clear();
     }
 
     public void sort() {
         Log.d("zgy", "sort: ");
 
         for (int i = 0; i < deviceBeens.size(); i++) {
-            for (int j = i+1; j < deviceBeens.size(); j++) {
-                if(deviceBeens.get(i).getRssi()<deviceBeens.get(j).getRssi()){
-                    deviceBean=deviceBeens.get(i);
-                    deviceBeens.set(i,deviceBeens.get(j));
-                    deviceBeens.set(j,deviceBean);
+            for (int j = i + 1; j < deviceBeens.size(); j++) {
+                if (deviceBeens.get(i).getRssi() < deviceBeens.get(j).getRssi()) {
+                    deviceBean = deviceBeens.get(i);
+                    deviceBeens.set(i, deviceBeens.get(j));
+                    deviceBeens.set(j, deviceBean);
                 }
             }
         }
@@ -108,7 +110,7 @@ import java.util.ArrayList;
             viewHolder.deviceName.setText(R.string.unknown_device);
         viewHolder.deviceAddress.setText(device.getAddress());
         viewHolder.rssi.setText(String.valueOf(deviceBeens.get(i).getRssi()));
-        viewHolder.id.setText(String.valueOf(i+1)+".");
+        viewHolder.id.setText(String.valueOf(i + 1) + ".");
 
         return view;
     }

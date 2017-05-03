@@ -17,28 +17,28 @@
     android:layout_height="wrap_content"
     android:orientation="horizontal"
     android:paddingLeft="10dp"
-    android:paddingTop="10dp"
-    android:paddingBottom="10dp"
-    android:paddingRight="10dp"
-    >
+    android:paddingRight="15dp"
+    android:paddingTop="10dp">
+
     <TextView
         android:id="@+id/id"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:gravity="center"
+        android:layout_alignParentBottom="true"
         android:layout_alignParentLeft="true"
-      android:layout_alignParentBottom="true"
-        android:textSize="25sp"
-        />
+        android:gravity="center"
+        android:textSize="25sp" />
+
     <LinearLayout
-        android:layout_marginLeft="30dp"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-
+        android:layout_marginLeft="30dp"
         android:layout_toRightOf="@id/id"
 
+        android:orientation="vertical"
+
         >
+
         <TextView
             android:id="@+id/device_name"
             android:layout_width="wrap_content"
@@ -57,10 +57,10 @@
         android:id="@+id/rssi"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="86"
-        android:gravity="center"
         android:layout_alignParentRight="true"
         android:layout_centerVertical="true"
+        android:gravity="center"
+        android:text="86"
 
         />
 
