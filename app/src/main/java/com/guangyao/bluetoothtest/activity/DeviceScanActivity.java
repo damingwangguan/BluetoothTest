@@ -130,14 +130,15 @@ public class DeviceScanActivity extends AppCompatActivity {
     private void scanLeDevice(final boolean enable) {
         if (enable) {
             // Stops scanning after a pre-defined scan period.
-            mHandler.postDelayed(new Runnable() {
+             runnable = new Runnable() {
                 @Override
                 public void run() {
                     mScanning = false;
                     bluetoothAdapter.stopLeScan(mLeScanCallback);
                     invalidateOptionsMenu();
                 }
-            }, SCAN_PERIOD);
+            };
+            mHandler.postDelayed(runnable, SCAN_PERIOD);
 
             mScanning = true;
             bluetoothAdapter.startLeScan(mLeScanCallback);
