@@ -52,8 +52,8 @@ public class LeDeviceListAdapter extends BaseAdapter {
     }
 
     public void clear() {
+        deviceBeens.clear();//先清除这个
         mLeDevices.clear();
-        deviceBeens.clear();
     }
 
     public void sort() {
