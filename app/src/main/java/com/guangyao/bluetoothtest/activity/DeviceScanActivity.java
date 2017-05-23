@@ -170,6 +170,7 @@ public class DeviceScanActivity extends AppCompatActivity {
                     mLeDeviceListAdapter.addDevice(deviceBean);
                     mLeDeviceListAdapter.addDevice(bluetoothDevice);
                     mLeDeviceListAdapter.notifyDataSetChanged();
+
                 }
             });
         }
@@ -186,8 +187,8 @@ public class DeviceScanActivity extends AppCompatActivity {
         } else {
             menu.findItem(R.id.stop).setVisible(true);
             menu.findItem(R.id.re_search).setVisible(false);
-            menu.findItem(R.id.menu_refresh).setActionView(
-                    R.layout.actionbar_indeterminate_progress);
+            menu.findItem(R.id.menu_refresh).setActionView(R.layout.actionbar_indeterminate_progress);
+
         }
 
         return super.onCreateOptionsMenu(menu);

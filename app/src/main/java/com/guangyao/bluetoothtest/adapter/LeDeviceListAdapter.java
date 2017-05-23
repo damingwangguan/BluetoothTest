@@ -96,7 +96,6 @@ public class LeDeviceListAdapter extends BaseAdapter {
             viewHolder.deviceAddress = (TextView) view.findViewById(R.id.device_address);
             viewHolder.deviceName = (TextView) view.findViewById(R.id.device_name);
             viewHolder.rssi = (TextView) view.findViewById(R.id.rssi);
-            viewHolder.id = (TextView) view.findViewById(R.id.id);
             view.setTag(viewHolder);
         } else {
             viewHolder = (ViewHolder) view.getTag();
@@ -110,7 +109,6 @@ public class LeDeviceListAdapter extends BaseAdapter {
             viewHolder.deviceName.setText(R.string.unknown_device);
         viewHolder.deviceAddress.setText(device.getAddress());
         viewHolder.rssi.setText(String.valueOf(deviceBeens.get(i).getRssi()));
-        viewHolder.id.setText(String.valueOf(i + 1) + ".");
 
         return view;
     }
@@ -119,6 +117,5 @@ public class LeDeviceListAdapter extends BaseAdapter {
         TextView deviceName;
         TextView deviceAddress;
         TextView rssi;
-        TextView id;
     }
 }
