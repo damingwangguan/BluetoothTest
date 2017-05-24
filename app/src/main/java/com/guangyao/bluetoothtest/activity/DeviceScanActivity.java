@@ -28,6 +28,7 @@ import android.widget.Toast;
 import com.guangyao.bluetoothtest.R;
 import com.guangyao.bluetoothtest.adapter.LeDeviceListAdapter;
 import com.guangyao.bluetoothtest.bean.DeviceBean;
+import com.guangyao.bluetoothtest.constans.Constans;
 
 import java.util.ArrayList;
 
@@ -68,7 +69,7 @@ public class DeviceScanActivity extends AppCompatActivity {
             return;
         }
 
-        initPermission();
+        initPermission();//6.0权限
 
 
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -79,7 +80,8 @@ public class DeviceScanActivity extends AppCompatActivity {
                     return;
                 }
                 Intent intent = new Intent();
-                intent.putExtra("address", device.getAddress());
+                intent.putExtra(Constans.ADDRESS, device.getAddress());
+                intent.putExtra(Constans.NAME, device.getName());
                 setResult(RESULT_OK, intent);
                 if (mScanning) {
                     bluetoothAdapter.stopLeScan(mLeScanCallback);

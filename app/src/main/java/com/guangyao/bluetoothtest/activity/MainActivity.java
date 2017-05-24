@@ -8,29 +8,114 @@ import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.BaseAdapter;
+import android.widget.GridView;
 import android.widget.TextView;
 
 import com.guangyao.bluetoothtest.App;
-import com.guangyao.bluetoothtest.service.BluetoothLeService;
 import com.guangyao.bluetoothtest.R;
+import com.guangyao.bluetoothtest.command.CommandManager;
+import com.guangyao.bluetoothtest.constans.Constans;
+import com.guangyao.bluetoothtest.service.BluetoothLeService;
+
+import java.util.ArrayList;
+import java.util.List;
+
 
 public class MainActivity extends AppCompatActivity {
 
     private static final int REQUEST_SEARCH = 1;
-
+    private TextView device_address;
+    private TextView device_name;
+    private String address;
+    private String name;
+    private GridView gridView;
+    private List<String> list;
+    private CommandManager manager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        TextView textView = (TextView) findViewById(R.id.hello);
-        textView.setOnClickListener(new View.OnClickListener() {
+        manager = CommandManager.getInstance(this);
+
+        device_address = (TextView) findViewById(R.id.device_address);
+        device_name = (TextView) findViewById(R.id.device_name);
+        gridView = (GridView) findViewById(R.id.gridView);
+
+        initdata();
+
+        MyAdapter myAdapter = new MyAdapter(list);
+        gridView.setAdapter(myAdapter);
+
+        gridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
-            public void onClick(View view) {
-                startActivity(new Intent(MainActivity.this, TestActivity.class));
+            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+                switch (i){
+                    case 0:
+                        manager.motorText(1);
+
+                        break;
+                    case 1:
+                        manager.screenShow(1);
+                        break;
+                    case 2:
+                        manager.smartWarnInfo(7, 2, "微克科技");
+//                        参数1
+//                        1	Incoming calling
+//                        2	Missed Call
+//                        3	Messages
+//                        4	Mail
+//                        5	Calendar
+//                        6	FaceTime
+//                        7	QQ
+//                        8	Skype
+
+//                        参数2
+//                        0:关 1：开 2:来消息通知
+
+//                        参数3
+//                        消息内容
+                        break;
+                    case 3:
+                        manager.rssiTest();
+                        break;
+                    case 4:
+                        manager.buttonClick();
+                        break;
+                    case 5:
+                        manager.getBatteryInfo();
+
+                        break;
+                    case 6:
+                        manager.sensorTest();
+                        break;
+                    case 7:
+                        manager.heartRateSensorTest();
+
+                        break;
+                    case 8:
+                        manager.realTimeAndOnceMeasure(0x0A, 1);//实时测量
+
+                        break;
+                     case 9:
+                        manager.setClearData();
+
+                        break;
+                    case 10:
+                        manager.Shutdown();
+
+                        break;
+
+                    default:
+                        break;
+                }
             }
         });
 
@@ -57,24 +142,18 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.main, menu);
-
         if (!App.mConnected) {
             menu.findItem(R.id.disconnect_ble).setVisible(false);
-
         } else {
             menu.findItem(R.id.disconnect_ble).setVisible(true);
-
         }
-
         if (!App.isConnecting) {
             menu.findItem(R.id.menu_refresh).setActionView(
                     null);
         } else {
             menu.findItem(R.id.menu_refresh).setActionView(
-                    R.layout.actionbar_indeterminate_progress);
+                    R.layout.actionbar_indeterminate_progress);//正在连接
         }
-
-
         return super.onCreateOptionsMenu(menu);
 
     }
@@ -87,10 +166,7 @@ public class MainActivity extends AppCompatActivity {
                 startActivityForResult(intent, REQUEST_SEARCH);
                 break;
             case R.id.disconnect_ble:
-
                 App.mBluetoothLeService.disconnect();
-
-                Log.i("zgy", "disconnect_ble");
                 break;
 
         }
@@ -101,13 +177,12 @@ public class MainActivity extends AppCompatActivity {
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == REQUEST_SEARCH && resultCode == RESULT_OK) {
-            String address = data.getStringExtra("address");
+            address = data.getStringExtra(Constans.ADDRESS);
+            name = data.getStringExtra(Constans.NAME);
             if (!TextUtils.isEmpty(address)) {
-                Log.i("zgy", address);
-
                 App.mBluetoothLeService.connect(address);
                 App.isConnecting = true;
-                invalidateOptionsMenu();
+                invalidateOptionsMenu();//显示正在连接 ...
             }
 
         }
@@ -127,14 +202,15 @@ public class MainActivity extends AppCompatActivity {
             if (BluetoothLeService.ACTION_GATT_CONNECTED.equals(action)) {
                 App.mConnected = true;
                 App.isConnecting = false;
-
                 //todo 更改界面ui
+                device_address.setText(address);
+                device_name.setText(name);
                 invalidateOptionsMenu();//更新菜单栏
-
             } else if (BluetoothLeService.ACTION_GATT_DISCONNECTED.equals(action)) {
                 App.mConnected = false;
                 //todo 更改界面ui
-
+                device_address.setText("未连接");
+                device_name.setText("");
                 invalidateOptionsMenu();//更新菜单栏
             } else if (BluetoothLeService.ACTION_GATT_SERVICES_DISCOVERED.equals(action)) {
                 // Show all the supported services and characteristics on the user interface.
@@ -142,10 +218,72 @@ public class MainActivity extends AppCompatActivity {
             } else if (BluetoothLeService.ACTION_DATA_AVAILABLE.equals(action)) {
 //                displayData(intent.getStringExtra(BluetoothLeService.EXTRA_DATA));
                 Log.i("zgy", "接收到的数据：" + intent.getStringExtra(BluetoothLeService.EXTRA_DATA));
-
             }
         }
     };
 
+
+    private void initdata() {
+        list = new ArrayList<>();
+        list.add(getString(R.string.find_braclet));
+        list.add(getString(R.string.screen_show));
+        list.add(getString(R.string.text));
+        list.add(getString(R.string.rssi));
+        list.add(getString(R.string.button));
+        list.add(getString(R.string.battery));
+        list.add(getString(R.string.three_six));
+        list.add(getString(R.string.heart_senor));
+        list.add(getString(R.string.heart_test));
+        list.add(getString(R.string.clear_data));
+        list.add(getString(R.string.restore));
+//        list.add(getString(R.string.hr_single_measurement));
+//        list.add(getString(R.string.hr_real_time_measurement));
+//        list.add(getString(R.string.oxygen_single_measurement));
+//        list.add(getString(R.string.oxygen_real_time_measurement));
+//        list.add(getString(R.string.bp_single_measurement));
+//        list.add(getString(R.string.bp_real_time_measurement));
+    }
+
+
+    class MyAdapter extends BaseAdapter {
+        private List<String> list;
+
+        public MyAdapter(List<String> list) {
+            this.list = list;
+        }
+
+        @Override
+        public int getCount() {
+            return list == null ? 0 : list.size();
+        }
+
+        @Override
+        public Object getItem(int i) {
+            return null;
+        }
+
+        @Override
+        public long getItemId(int i) {
+            return 0;
+        }
+
+        @Override
+        public View getView(int i, View convertView, ViewGroup viewGroup) {
+            ViewHolder viewHolder;
+            if (convertView == null) {
+                viewHolder = new ViewHolder();
+                convertView = LayoutInflater.from(MainActivity.this).inflate(R.layout.channel_item, null);
+                viewHolder.text = (TextView) convertView.findViewById(R.id.channel_text);
+                convertView.setTag(viewHolder);
+            } else {
+                viewHolder = (ViewHolder) convertView.getTag();
+            }
+            viewHolder.text.setText(list.get(i));
+            return convertView;
+        }
+    }
+    class ViewHolder {
+        TextView text;
+    }
 
 }

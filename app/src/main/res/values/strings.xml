@@ -13,5 +13,21 @@
     <string name="location_warn">请允许获取位置信息，否则将会导致部分功能无法正常运行！</string>
     <string name="function_limited">功能受限</string>
     <string name="location_refused">由于访问位置的权限没有被授予，该应用程序的部分功能将受到限制。</string>
-
+    <string name="find_braclet">马达测试</string>
+    <string name="screen_show">屏显测试</string>
+    <string name="text">中文字库</string>
+    <string name="rssi">RSSI</string>
+    <string name="button">按键测试</string>
+    <string name="battery">充电/电池</string>
+    <string name="three_six">三轴/六轴传感器</string>
+    <string name="heart_senor">心率传感器</string>
+    <string name="heart_test">测量心率</string>
+    <string name="clear_data">清除数据</string>
+    <string name="restore">恢复出厂设置</string>
+    <string name="hr_single_measurement">心率单次测量</string>
+    <string name="hr_real_time_measurement">心率实时测量</string>
+    <string name="oxygen_single_measurement">血氧单次测量</string>
+    <string name="oxygen_real_time_measurement">血氧实时测量</string>
+    <string name="bp_single_measurement">血压单次测量</string>
+    <string name="bp_real_time_measurement">血压实时测量</string>
 </resources>

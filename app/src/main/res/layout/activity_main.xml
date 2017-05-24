@@ -1,19 +1,55 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="com.wakeup.bluetoothtest.activity.MainActivity">
+    tools:context="com.guangyao.bluetoothtest.activity.MainActivity"
+    android:orientation="vertical"
+    >
 
     <TextView
-        android:id="@+id/hello"
+        android:layout_marginTop="20dp"
+        android:id="@+id/device_name"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Hello World!"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        android:textColor="@color/colorAccent"
+        android:textSize="@dimen/device_name_size"
+        android:gravity="center"
+        android:layout_gravity="center"
 
-</android.support.constraint.ConstraintLayout>
+       />
+    <TextView
+        android:layout_marginTop="5dp"
+        android:id="@+id/device_address"
+        android:layout_below="@id/device_name"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="未连接"
+        android:layout_gravity="center"
+        android:textColor="@color/colorAccent"
+        android:gravity="center"
+
+        />
+
+    <TextView
+        android:id="@+id/test_result"
+        android:layout_width="match_parent"
+        android:layout_height="120dp"
+        android:textSize="@dimen/result_size"
+        android:gravity="center"
+        />
+
+   <GridView
+       android:id="@+id/gridView"
+       android:layout_width="match_parent"
+       android:layout_height="0dp"
+       android:layout_weight="1"
+       android:layout_alignParentBottom="true"
+       android:numColumns="3"
+       >
+
+   </GridView>
+
+
+
+</LinearLayout>

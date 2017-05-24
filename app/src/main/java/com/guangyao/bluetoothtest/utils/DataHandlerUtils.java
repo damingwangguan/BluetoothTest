@@ -1,13 +1,29 @@
 package com.guangyao.bluetoothtest.utils;
 
-import android.content.Context;
-import android.widget.Toast;
-
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * 数据操作工具类
  */
 public class DataHandlerUtils {
+
+    /**
+     * 拼接字节数组
+     * @param data1
+     * @param data2
+     * @return
+     */
+    public static byte[] addBytes(byte[] data1, byte[] data2) {
+        byte[] data3 = data1;
+        if (data2 != null && data2.length != 0){
+            data3 = new byte[data1.length + data2.length];
+            System.arraycopy(data1, 0, data3, 0, data1.length);
+            System.arraycopy(data2, 0, data3, data1.length, data2.length);
+        }
+        return data3;
+    }
+
 
     /**
      * byte[] --> 十六进制的字符串
@@ -32,23 +48,13 @@ public class DataHandlerUtils {
     }
 
     /**
-     * 十六进制字符串转字节数组
-     * @param hexRepresentation
-     * @return
+     * 字节数组转化成集合
      */
-    public static byte[] hexToBytes(Context context, String hexRepresentation) {
-        if (hexRepresentation.length() % 2 == 1) {
-//            throw new IllegalArgumentException("hxToBytes requires an even-length String parameter");
-            Toast.makeText(context, "发送的指令有误", Toast.LENGTH_LONG).show();
-            return null;
+    public static List<Integer> bytesToArrayList(byte[] bytes){
+        List<Integer> datas = new ArrayList<>();
+        for (int i = 0; i < bytes.length; i++) {
+            datas.add(bytes[i] & 0xff);
         }
-        int len = hexRepresentation.length();
-        byte[] data = new byte[len / 2];
-
-        for (int i = 0; i < len; i += 2) {
-            data[i / 2] = (byte) ((Character.digit(hexRepresentation.charAt(i), 16) << 4)
-                    + Character.digit(hexRepresentation.charAt(i + 1), 16));
-        }
-        return data;
+        return datas;
     }
 }

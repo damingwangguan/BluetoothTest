@@ -26,15 +26,24 @@ import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothGattService;
 import android.bluetooth.BluetoothManager;
 import android.bluetooth.BluetoothProfile;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Binder;
 import android.os.IBinder;
+import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
 import com.guangyao.bluetoothtest.SampleGattAttributes;
+import com.guangyao.bluetoothtest.constans.BleConstans;
+import com.guangyao.bluetoothtest.constans.Constans;
+import com.guangyao.bluetoothtest.utils.DataHandlerUtils;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.UUID;
 
 /**
@@ -67,6 +76,40 @@ public class BluetoothLeService extends Service {
 
     public final static UUID UUID_HEART_RATE_MEASUREMENT =
             UUID.fromString(SampleGattAttributes.HEART_RATE_MEASUREMENT);
+//todo -------------------------------------------------------------
+
+    public static final UUID CCCD = UUID
+            .fromString("00002902-0000-1000-8000-00805f9b34fb");
+    public static final UUID RX_SERVICE_UUID = UUID
+            .fromString("6e400001-b5a3-f393-e0a9-e50e24dcca9e");
+    public static final UUID RX_CHAR_UUID = UUID
+            .fromString("6e400002-b5a3-f393-e0a9-e50e24dcca9e");
+    public static final UUID TX_CHAR_UUID = UUID
+            .fromString("6e400003-b5a3-f393-e0a9-e50e24dcca9e");
+
+    private static final int SEND_PACKET_SIZE = 20;
+    private static final int FREE = 0;
+    private static final int SENDING = 1;
+    private static final int RECEIVING = 2;
+    private int STOP_SCAN = 1;
+    private int CONNECT_DEVICE = 3;
+    private int CONNECT_Gatt = 2;
+    private String mScanAddress = null;
+    private boolean mScanning = false;
+
+    private int ble_status = FREE;
+    private int packet_counter = 0;
+    private int send_data_pointer = 0;
+    private byte[] send_data = null;
+    private boolean first_packet = false;
+    private boolean final_packet = false;
+    private boolean packet_send = false;
+    private Timer mTimer;
+    private int time_out_counter = 0;
+    private int TIMER_INTERVAL = 100;
+    private int TIME_OUT_LIMIT = 100;
+    public ArrayList<byte[]> data_queue = new ArrayList<>();
+    boolean sendingStoredData = false;
 
     // Implements callback methods for GATT events that the app cares about.  For example,
     // connection change and services discovered.
@@ -117,6 +160,7 @@ public class BluetoothLeService extends Service {
             Log.d(TAG, "onCharacteristicChanged: ");
         }
     };
+    private SendDataToBleReceiver sendDataToBleReceiver;
 
     private void broadcastUpdate(final String action) {
         final Intent intent = new Intent(action);
@@ -318,5 +362,238 @@ public class BluetoothLeService extends Service {
         if (mBluetoothGatt == null) return null;
 
         return mBluetoothGatt.getServices();
+    }
+
+    //todo -----------------------------------------------------
+
+
+    class SendDataToBleReceiver extends BroadcastReceiver {
+
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            String action = intent.getAction();
+
+            if (action.equals(BleConstans.ACTION_SEND_DATA_TO_BLE)) {
+                byte[] send_data = intent.getByteArrayExtra(Constans.EXTRA_SEND_DATA_TO_BLE);
+                for (byte b : send_data) {
+                    Log.i("zgy", b + "");
+                }
+                if (send_data != null) {
+                    //发送数据
+                    BLE_send_data_set(send_data, false);
+                }
+            }
+        }
+    }
+
+
+    @Override
+    public void onCreate() {
+        super.onCreate();
+        //// TODO: 2017/5/24  注册发送数据的广播
+        sendDataToBleReceiver = new SendDataToBleReceiver();
+        IntentFilter intentFilter = new IntentFilter();
+        intentFilter.addAction(BleConstans.ACTION_SEND_DATA_TO_BLE);
+        LocalBroadcastManager.getInstance(this).registerReceiver(sendDataToBleReceiver, intentFilter);
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(sendDataToBleReceiver);
+    }
+
+    /**
+     * 设置数据到内部缓冲区对BLE发送数据
+     */
+    private void BLE_send_data_set(byte[] data, boolean retry_status) {
+        if (ble_status != FREE || mConnectionState != STATE_CONNECTED) {
+            //蓝牙没有连接或是正在接受或发送数据，此时将要发送的指令加入集合
+            if (sendingStoredData) {
+                if (!retry_status) {
+                    //字节数组添加到集合
+                    data_queue.add(data);
+                }
+                return;
+            } else {
+                data_queue.add(data);
+                start_timer();
+            }
+
+        } else {
+            //蓝牙的状态，正在发送中
+            ble_status = SENDING;
+
+            if (data_queue.size() != 0) {
+                //获取发送的字节数组
+                send_data = data_queue.get(0);
+                sendingStoredData = false;
+            } else {
+                send_data = data;
+            }
+            //发送的包的数量
+            packet_counter = 0;
+            send_data_pointer = 0;
+            //第一个包
+            first_packet = true;
+            //往蓝牙写数据
+            BLE_data_send();
+
+            if (data_queue.size() != 0) {
+                data_queue.remove(0);
+            }
+
+            if (data_queue.size() == 0) {
+                if (mTimer != null) {
+                    mTimer.cancel();
+                }
+            }
+        }
+    }
+
+    /**
+     * 定时器
+     */
+    private void start_timer() {
+        sendingStoredData = true;
+        if (mTimer != null) {
+            mTimer.cancel();
+        }
+        mTimer = new Timer(true);
+        mTimer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                timer_Tick();
+            }
+        }, 100, TIMER_INTERVAL);
+    }
+
+    /**
+     * @brief Interval timer function.
+     */
+    private void timer_Tick() {
+
+        if (data_queue.size() != 0) {
+            sendingStoredData = true;
+            BLE_send_data_set(data_queue.get(0), true);
+        }
+
+        if (time_out_counter < TIME_OUT_LIMIT) {
+            time_out_counter++;
+        } else {
+            ble_status = FREE;
+            time_out_counter = 0;
+        }
+        return;
+    }
+
+
+    /**
+     * @brief Send data using BLE. 发送数据到蓝牙
+     */
+    private void BLE_data_send() {
+        int err_count = 0;
+        int send_data_pointer_save;
+        int wait_counter;
+        boolean first_packet_save;
+        while (!final_packet) {
+            //不是最后一个包
+            byte[] temp_buffer;
+            send_data_pointer_save = send_data_pointer;
+            first_packet_save = first_packet;
+            if (first_packet) {
+                //第一个包
+                //发送数据大于20个字节
+                if ((send_data.length - send_data_pointer) > (SEND_PACKET_SIZE)) {
+                    temp_buffer = new byte[SEND_PACKET_SIZE];//20
+                    for (int i = 0; i < SEND_PACKET_SIZE; i++) {
+                        //将原数组加入新创建的数组
+                        temp_buffer[i] = send_data[send_data_pointer];
+                        send_data_pointer++;
+                    }
+                } else {
+                    //发送的数据包不大于20
+                    temp_buffer = new byte[send_data.length - send_data_pointer];
+                    for (int i = 0; i < temp_buffer.length; i++) {
+                        //将原数组未发送的部分加入新创建的数组
+                        temp_buffer[i] = send_data[send_data_pointer];
+                        send_data_pointer++;
+                    }
+                    final_packet = true;
+                }
+                first_packet = false;
+            } else {
+                //不是第一个包
+                if (send_data.length - send_data_pointer >= SEND_PACKET_SIZE) {
+                    temp_buffer = new byte[SEND_PACKET_SIZE];
+                    //第二个包是0，第三个是1...
+                    temp_buffer[0] = (byte) packet_counter;
+                    for (int i = 1; i < SEND_PACKET_SIZE; i++) {
+                        temp_buffer[i] = send_data[send_data_pointer];
+                        send_data_pointer++;
+                    }
+                } else {
+                    //数据长度不大于20
+                    final_packet = true;
+                    temp_buffer = new byte[send_data.length - send_data_pointer + 1];
+                    temp_buffer[0] = (byte) packet_counter;
+                    for (int i = 1; i < temp_buffer.length; i++) {
+                        temp_buffer[i] = send_data[send_data_pointer];
+                        send_data_pointer++;
+                    }
+                }
+                packet_counter++;
+            }
+            packet_send = false;
+
+            //向蓝牙中写数据temp_buffer
+            boolean status = writeRXCharacteristic(temp_buffer);
+            if ((status == false) && (err_count < 3)) {//数据写入失败
+                err_count++;
+                try {
+                    Thread.sleep(50);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                send_data_pointer = send_data_pointer_save;
+                first_packet = first_packet_save;
+                packet_counter--;
+            }
+            // Send Wait
+            for (wait_counter = 0; wait_counter < 5; wait_counter++) {
+                if (packet_send == true) {
+                    break;
+                }
+                try {
+                    Thread.sleep(1);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+        final_packet = false;
+        ble_status = FREE;//发送完后，蓝牙空闲
+    }
+
+    /**
+     * @brief writeRXCharacteristic
+     */
+    public boolean writeRXCharacteristic(byte[] value) {
+        BluetoothGattService RxService = mBluetoothGatt
+                .getService(RX_SERVICE_UUID);
+        if (RxService == null) {
+            return false;
+        }
+
+        BluetoothGattCharacteristic RxChar = RxService
+                .getCharacteristic(RX_CHAR_UUID);
+        if (RxChar == null) {
+            return false;
+        }
+        //往蓝牙写入字节数组
+        RxChar.setValue(value);
+        boolean status = mBluetoothGatt.writeCharacteristic(RxChar);
+        Log.d("lq", "发送指令：status：" + status + "-->" + DataHandlerUtils.bytesToHexStr(value));
+        return status;
     }
 }
