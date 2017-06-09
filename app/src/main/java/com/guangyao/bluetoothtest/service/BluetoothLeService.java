@@ -262,17 +262,17 @@ public class BluetoothLeService extends Service {
             return false;
         }
 
-        // Previously connected device.  Try to reconnect.
-        if (mBluetoothDeviceAddress != null && address.equals(mBluetoothDeviceAddress)
-                && mBluetoothGatt != null) {
-            Log.d(TAG, "Trying to use an existing mBluetoothGatt for connection.");
-            if (mBluetoothGatt.connect()) {
-                mConnectionState = STATE_CONNECTING;
-                return true;
-            } else {
-                return false;
-            }
-        }
+        // Previously connected device.  Try to reconnect.   //重连太慢了
+//        if (mBluetoothDeviceAddress != null && address.equals(mBluetoothDeviceAddress)
+//                && mBluetoothGatt != null) {
+//            Log.d(TAG, "Trying to use an existing mBluetoothGatt for connection.");
+//            if (mBluetoothGatt.connect()) {
+//                mConnectionState = STATE_CONNECTING;
+//                return true;
+//            } else {
+//                return false;
+//            }
+//        }
 
         final BluetoothDevice device = mBluetoothAdapter.getRemoteDevice(address);
         if (device == null) {
@@ -375,9 +375,9 @@ public class BluetoothLeService extends Service {
 
             if (action.equals(BleConstans.ACTION_SEND_DATA_TO_BLE)) {
                 byte[] send_data = intent.getByteArrayExtra(Constans.EXTRA_SEND_DATA_TO_BLE);
-                for (byte b : send_data) {
-                    Log.i("zgy", b + "");
-                }
+//                for (byte b : send_data) {
+//                    Log.i("zgy", b + "");
+//                }
                 if (send_data != null) {
                     //发送数据
                     BLE_send_data_set(send_data, false);
@@ -593,7 +593,7 @@ public class BluetoothLeService extends Service {
         //往蓝牙写入字节数组
         RxChar.setValue(value);
         boolean status = mBluetoothGatt.writeCharacteristic(RxChar);
-        Log.d("lq", "发送指令：status：" + status + "-->" + DataHandlerUtils.bytesToHexStr(value));
+        Log.d("zgy", "发送指令：status：" + status + "-->" + DataHandlerUtils.bytesToHexStr(value));
         return status;
     }
 }
