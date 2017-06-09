@@ -16,6 +16,7 @@
 
 package com.guangyao.bluetoothtest.service;
 
+import android.annotation.SuppressLint;
 import android.app.Service;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
@@ -138,6 +139,8 @@ public class BluetoothLeService extends Service {
         public void onServicesDiscovered(BluetoothGatt gatt, int status) {
             if (status == BluetoothGatt.GATT_SUCCESS) {
                 broadcastUpdate(ACTION_GATT_SERVICES_DISCOVERED);
+                enableTXNotification();//允许接收蓝牙设备发送过来的数据
+
             } else {
                 Log.w(TAG, "onServicesDiscovered received: " + status);
             }
@@ -152,12 +155,27 @@ public class BluetoothLeService extends Service {
             }
             Log.d(TAG, "onCharacteristicRead: ");
         }
-
+        // 手环 -> 手机 当有数据传过来的时候调用
         @Override
         public void onCharacteristicChanged(BluetoothGatt gatt,
                                             BluetoothGattCharacteristic characteristic) {
+            Log.d(TAG, "onCharacteristicChanged");
+
             broadcastUpdate(ACTION_DATA_AVAILABLE, characteristic);
-            Log.d(TAG, "onCharacteristicChanged: ");
+
+        }
+
+        @Override
+        public void onCharacteristicWrite(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
+            super.onCharacteristicWrite(gatt, characteristic, status);
+            Log.d(TAG, "onCharacteristicWrite: ");
+            
+        }
+
+        @Override
+        public void onReadRemoteRssi(BluetoothGatt gatt, int rssi, int status) {
+            super.onReadRemoteRssi(gatt, rssi, status);
+            Log.d(TAG, "onReadRemoteRssi: ");
         }
     };
     private SendDataToBleReceiver sendDataToBleReceiver;
@@ -174,30 +192,54 @@ public class BluetoothLeService extends Service {
         // This is special handling for the Heart Rate Measurement profile.  Data parsing is
         // carried out as per profile specifications:
         // http://developer.bluetooth.org/gatt/characteristics/Pages/CharacteristicViewer.aspx?u=org.bluetooth.characteristic.heart_rate_measurement.xml
-        if (UUID_HEART_RATE_MEASUREMENT.equals(characteristic.getUuid())) {
-            int flag = characteristic.getProperties();
-            int format = -1;
-            if ((flag & 0x01) != 0) {
-                format = BluetoothGattCharacteristic.FORMAT_UINT16;
-                Log.d(TAG, "Heart rate format UINT16.");
-            } else {
-                format = BluetoothGattCharacteristic.FORMAT_UINT8;
-                Log.d(TAG, "Heart rate format UINT8.");
-            }
-            final int heartRate = characteristic.getIntValue(format, 1);
-            Log.d(TAG, String.format("Received heart rate: %d", heartRate));
-            intent.putExtra(EXTRA_DATA, String.valueOf(heartRate));
-        } else {
-            // For all other profiles, writes the data formatted in HEX.
-            final byte[] data = characteristic.getValue();
-            if (data != null && data.length > 0) {
-                final StringBuilder stringBuilder = new StringBuilder(data.length);
-                for (byte byteChar : data)
-                    stringBuilder.append(String.format("%02X ", byteChar));
-                intent.putExtra(EXTRA_DATA, new String(data) + "\n" + stringBuilder.toString());
+//        if (UUID_HEART_RATE_MEASUREMENT.equals(characteristic.getUuid())) {
+//            int flag = characteristic.getProperties();
+//            int format = -1;
+//            if ((flag & 0x01) != 0) {
+//                format = BluetoothGattCharacteristic.FORMAT_UINT16;
+//                Log.d(TAG, "Heart rate format UINT16.");
+//            } else {
+//                format = BluetoothGattCharacteristic.FORMAT_UINT8;
+//                Log.d(TAG, "Heart rate format UINT8.");
+//            }
+//            final int heartRate = characteristic.getIntValue(format, 1);
+//            Log.d(TAG, String.format("Received heart rate: %d", heartRate));
+//            intent.putExtra(EXTRA_DATA, String.valueOf(heartRate));
+//        } else {
+//            // For all other profiles, writes the data formatted in HEX.
+//            final byte[] data = characteristic.getValue();
+//            if (data != null && data.length > 0) {
+//                final StringBuilder stringBuilder = new StringBuilder(data.length);
+//                for (byte byteChar : data)
+//                    stringBuilder.append(String.format("%02X ", byteChar));
+//                intent.putExtra(EXTRA_DATA, new String(data) + "\n" + stringBuilder.toString());
+//            }
+//        }
+
+        if (TX_CHAR_UUID.equals(characteristic.getUuid())){
+            byte[] data = characteristic.getValue();
+            Log.d(TAG, "broadcastUpdate: received from ble:" +DataHandlerUtils.bytesToHexStr(data));
+
+            if (ble_status == FREE || ble_status == RECEIVING) {
+                ble_status = RECEIVING;
+                if (data != null) {
+                    intent.putExtra(EXTRA_DATA, data);
+                    //发送广播
+//                    LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
+                    sendBroadcast(intent);
+
+                }
+                ble_status = FREE;
+
+            } else if (ble_status == SENDING) {
+                if (final_packet) {
+                    final_packet = false;
+                }
+                ble_status = FREE;
             }
         }
-        sendBroadcast(intent);
+
+
     }
 
     public class LocalBinder extends Binder {
@@ -375,9 +417,6 @@ public class BluetoothLeService extends Service {
 
             if (action.equals(BleConstans.ACTION_SEND_DATA_TO_BLE)) {
                 byte[] send_data = intent.getByteArrayExtra(Constans.EXTRA_SEND_DATA_TO_BLE);
-//                for (byte b : send_data) {
-//                    Log.i("zgy", b + "");
-//                }
                 if (send_data != null) {
                     //发送数据
                     BLE_send_data_set(send_data, false);
@@ -593,7 +632,29 @@ public class BluetoothLeService extends Service {
         //往蓝牙写入字节数组
         RxChar.setValue(value);
         boolean status = mBluetoothGatt.writeCharacteristic(RxChar);
-        Log.d("zgy", "发送指令：status：" + status + "-->" + DataHandlerUtils.bytesToHexStr(value));
+        Log.d(TAG, "发送指令：status：" + status + "-->" + DataHandlerUtils.bytesToHexStr(value));
         return status;
     }
+    /**
+     * @brief enableTXNotification
+     */
+    @SuppressLint("InlinedApi")
+    public void enableTXNotification() {
+        BluetoothGattService RxService = mBluetoothGatt
+                .getService(RX_SERVICE_UUID);
+        if (RxService == null) {
+            return;
+        }
+
+        BluetoothGattCharacteristic TxChar = RxService
+                .getCharacteristic(TX_CHAR_UUID);
+        if (TxChar == null) {
+            return;
+        }
+        mBluetoothGatt.setCharacteristicNotification(TxChar, true);
+        BluetoothGattDescriptor descriptor = TxChar.getDescriptor(CCCD);
+        descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
+        mBluetoothGatt.writeDescriptor(descriptor);
+    }
+
 }

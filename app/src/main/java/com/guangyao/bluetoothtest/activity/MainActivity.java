@@ -23,6 +23,7 @@ import com.guangyao.bluetoothtest.R;
 import com.guangyao.bluetoothtest.command.CommandManager;
 import com.guangyao.bluetoothtest.constans.Constans;
 import com.guangyao.bluetoothtest.service.BluetoothLeService;
+import com.guangyao.bluetoothtest.utils.DataHandlerUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -33,11 +34,13 @@ public class MainActivity extends AppCompatActivity {
     private static final int REQUEST_SEARCH = 1;
     private TextView device_address;
     private TextView device_name;
+    private TextView test_result;
     private String address;
     private String name;
     private GridView gridView;
     private List<String> list;
     private CommandManager manager;
+    private boolean isTestHR;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -47,6 +50,7 @@ public class MainActivity extends AppCompatActivity {
 
         device_address = (TextView) findViewById(R.id.device_address);
         device_name = (TextView) findViewById(R.id.device_name);
+        test_result = (TextView) findViewById(R.id.test_result);
         gridView = (GridView) findViewById(R.id.gridView);
 
         initdata();
@@ -101,7 +105,13 @@ public class MainActivity extends AppCompatActivity {
 
                         break;
                     case 8:
-                        manager.realTimeAndOnceMeasure(0x0A, 1);//实时测量
+                        if (!isTestHR){
+                            manager.realTimeAndOnceMeasure(0x0A, 1);//实时测量
+                            isTestHR=true;
+                        }else {
+                            manager.realTimeAndOnceMeasure(0x0A, 0);//实时测量
+                            isTestHR=false;
+                        }
 
                         break;
                      case 9:
@@ -217,7 +227,85 @@ public class MainActivity extends AppCompatActivity {
 //                displayGattServices(mBluetoothLeService.getSupportedGattServices());
             } else if (BluetoothLeService.ACTION_DATA_AVAILABLE.equals(action)) {
 //                displayData(intent.getStringExtra(BluetoothLeService.EXTRA_DATA));
-                Log.i("zgy", "接收到的数据：" + intent.getStringExtra(BluetoothLeService.EXTRA_DATA));
+//                Log.i("zgy", "接收到的数据：" + intent.getStringExtra(BluetoothLeService.EXTRA_DATA));
+
+                final byte[] txValue = intent
+                        .getByteArrayExtra(BluetoothLeService.EXTRA_DATA);
+                Log.i("BluetoothLeService", "接收的数据：" + DataHandlerUtils.bytesToHexStr(txValue));
+
+                List<Integer> datas = DataHandlerUtils.bytesToArrayList(txValue);
+
+                Log.i("zgy",datas.toString());
+
+                //RSSI
+                if (datas.get(4) == 0XB5) {// [171, 0, 4, 255, 181, 128, 72]
+                    Integer rssi = datas.get(6);
+                    Log.d("zgy", "RSSI" + rssi);
+                    test_result.setText("-"+rssi);
+                }
+
+                //按键测试
+                if (datas.get(4) == 0XB6) {//[171, 0, 4, 255, 182, 128, 0]
+                    Integer button = datas.get(6);
+                    if(button==0){
+                        test_result.setText("没有按下");
+                    }else if(button==1){
+                        test_result.setText("按下");
+
+                    }
+
+                }
+                //充电 、电量
+                if (datas.get(4)==0X91){//[171, 0, 5, 255, 145, 128, 0, 100]
+                    Integer integer = datas.get(6);//是否充电
+                    Integer integer1 = datas.get(7);//电量多少
+                    if (integer==0){
+                        test_result.setText("未充电  "+"电量:"+integer1+"%");
+                    }else if (integer==1){
+                        test_result.setText("正在充电  "+"电量:"+integer1+"%");
+                    }
+                }
+
+                //三轴传感器
+                if (datas.get(4) == 0XB3) {//[171, 0, 5, 255, 179, 128, 1, 1]
+                    Integer integer1 = datas.get(6);//通信是否正常
+                    Integer integer2 = datas.get(7);//初始化是否成功
+                    if (integer1==0){
+                        if (integer2==0){
+                            test_result.setText("通信不正常  "+"初始化不成功");
+                        }else if (integer2==1){
+                            test_result.setText("通信不正常  "+"初始化成功");
+
+                        }
+                    }else if (integer1==1){
+                        if (integer2==0){
+                            test_result.setText("通信正常  "+"初始化不成功");
+
+                        }else if (integer2==1){
+                            test_result.setText("通信正常  "+"初始化成功");
+
+                        }
+                    }
+
+                }
+
+                //心率传感器
+                if (datas.get(4) == 0XB4) {//[171, 0, 4, 255, 180, 128, 1]
+                    Integer integer = datas.get(6);
+                    if (integer==0){
+                        test_result.setText("通信不正常");
+
+                    }else if (integer==1){
+                        test_result.setText("通信正常");
+
+                    }
+
+                }
+                if (datas.get(4)==0x31){//[171, 0, 5, 255, 49, 10, 0, 190]   [171, 0, 5, 255, 49, 10, 84, 48]
+                    Integer integer = datas.get(6);
+                    test_result.setText(String.valueOf(integer));
+                }
+
             }
         }
     };
