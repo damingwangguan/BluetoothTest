@@ -2,9 +2,12 @@ package com.guangyao.bluetoothtest.activity;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.graphics.Color;
 import android.os.Bundle;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
 import android.util.Log;
@@ -17,6 +20,7 @@ import android.widget.AdapterView;
 import android.widget.BaseAdapter;
 import android.widget.GridView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.guangyao.bluetoothtest.App;
 import com.guangyao.bluetoothtest.R;
@@ -41,6 +45,7 @@ public class MainActivity extends AppCompatActivity {
     private List<String> list;
     private CommandManager manager;
     private boolean isTestHR;
+    private MyAdapter myAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -55,22 +60,23 @@ public class MainActivity extends AppCompatActivity {
 
         initdata();
 
-        MyAdapter myAdapter = new MyAdapter(list);
+        myAdapter = new MyAdapter(list);
         gridView.setAdapter(myAdapter);
 
         gridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-                switch (i){
-                    case 0:
-                        manager.motorText(1);
+                if (App.mConnected){
+                    switch (i){
+                        case 0:
+                            manager.motorText(1);
 
-                        break;
-                    case 1:
-                        manager.screenShow(1);
-                        break;
-                    case 2:
-                        manager.smartWarnInfo(7, 2, "微克科技");
+                            break;
+                        case 1:
+                            manager.screenShow(1);
+                            break;
+                        case 2:
+                            manager.smartWarnInfo(7, 2, "微克科技");
 //                        参数1
 //                        1	Incoming calling
 //                        2	Missed Call
@@ -86,46 +92,68 @@ public class MainActivity extends AppCompatActivity {
 
 //                        参数3
 //                        消息内容
-                        break;
-                    case 3:
-                        manager.rssiTest();
-                        break;
-                    case 4:
-                        manager.buttonClick();
-                        break;
-                    case 5:
-                        manager.getBatteryInfo();
+                            break;
+                        case 3:
+                            manager.rssiTest();
+                            break;
+                        case 4:
+                            manager.buttonClick();
+                            break;
+                        case 5:
+                            manager.getBatteryInfo();
 
-                        break;
-                    case 6:
-                        manager.sensorTest();
-                        break;
-                    case 7:
-                        manager.heartRateSensorTest();
+                            break;
+                        case 6:
+                            manager.sensorTest();
+                            break;
+                        case 7:
+                            manager.heartRateSensorTest();
 
-                        break;
-                    case 8:
-                        if (!isTestHR){
-                            manager.realTimeAndOnceMeasure(0x0A, 1);//实时测量
-                            isTestHR=true;
-                        }else {
-                            manager.realTimeAndOnceMeasure(0x0A, 0);//实时测量
-                            isTestHR=false;
-                        }
+                            break;
+                        case 8:
+                            if (!isTestHR){
+                                manager.realTimeAndOnceMeasure(0x0A, 1);//实时测量
+                                isTestHR=true;
+                                view.setBackgroundColor(getResources().getColor(R.color.colorAccent));
+                            }else {
+                                manager.realTimeAndOnceMeasure(0x0A, 0);//实时测量
+                                isTestHR=false;
+                                view.setBackgroundColor(Color.TRANSPARENT);
+                            }
 
-                        break;
-                     case 9:
-                        manager.setClearData();
+                            break;
+                        case 9:
+//                            manager.setClearData();
+                            AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+                            builder.setTitle("警告");
+                            builder.setMessage("确定要清除数据吗");
+                            builder.setNegativeButton("取消", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialogInterface, int i) {
 
-                        break;
-                    case 10:
-                        manager.Shutdown();
+                                }
+                            });
 
-                        break;
+                            builder.setPositiveButton("确定", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialogInterface, int i) {
 
-                    default:
-                        break;
+                                }
+                            });
+                            break;
+                        case 10:
+                            manager.Shutdown();
+
+                            break;
+
+                        default:
+                            break;
+                    }
+                }else {
+                    Toast.makeText(MainActivity.this,"手环未连接",Toast.LENGTH_SHORT).show();
                 }
+
+
             }
         });
 
@@ -301,6 +329,7 @@ public class MainActivity extends AppCompatActivity {
                     }
 
                 }
+                //测量心率
                 if (datas.get(4)==0x31){//[171, 0, 5, 255, 49, 10, 0, 190]   [171, 0, 5, 255, 49, 10, 84, 48]
                     Integer integer = datas.get(6);
                     test_result.setText(String.valueOf(integer));
