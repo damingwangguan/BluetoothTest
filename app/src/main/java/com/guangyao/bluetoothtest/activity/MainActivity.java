@@ -244,12 +244,16 @@ public class MainActivity extends AppCompatActivity {
                 device_address.setText(address);
                 device_name.setText(name);
                 invalidateOptionsMenu();//更新菜单栏
+                Log.d("BluetoothLeService","连上");
+
             } else if (BluetoothLeService.ACTION_GATT_DISCONNECTED.equals(action)) {
                 App.mConnected = false;
                 //todo 更改界面ui
                 device_address.setText("未连接");
                 device_name.setText("");
                 invalidateOptionsMenu();//更新菜单栏
+                App.mBluetoothLeService.close();//断开更彻底(没有这一句，在某些机型，重连会连不上)
+                Log.d("BluetoothLeService","断开");
             } else if (BluetoothLeService.ACTION_GATT_SERVICES_DISCOVERED.equals(action)) {
                 // Show all the supported services and characteristics on the user interface.
 //                displayGattServices(mBluetoothLeService.getSupportedGattServices());
