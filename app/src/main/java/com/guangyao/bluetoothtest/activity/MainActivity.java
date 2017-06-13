@@ -66,8 +66,8 @@ public class MainActivity extends AppCompatActivity {
         gridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-                if (App.mConnected){
-                    switch (i){
+                if (App.mConnected) {
+                    switch (i) {
                         case 0:
                             manager.motorText(1);
 
@@ -111,22 +111,21 @@ public class MainActivity extends AppCompatActivity {
 
                             break;
                         case 8:
-                            if (!isTestHR){
+                            if (!isTestHR) {
                                 manager.realTimeAndOnceMeasure(0x0A, 1);//实时测量
-                                isTestHR=true;
+                                isTestHR = true;
                                 view.setBackgroundColor(getResources().getColor(R.color.colorAccent));
-                            }else {
+                            } else {
                                 manager.realTimeAndOnceMeasure(0x0A, 0);//实时测量
-                                isTestHR=false;
+                                isTestHR = false;
                                 view.setBackgroundColor(Color.TRANSPARENT);
                             }
 
                             break;
                         case 9:
-//                            manager.setClearData();
                             AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
                             builder.setTitle("警告");
-                            builder.setMessage("确定要清除数据吗");
+                            builder.setMessage("确定要清除数据吗?");
                             builder.setNegativeButton("取消", new DialogInterface.OnClickListener() {
                                 @Override
                                 public void onClick(DialogInterface dialogInterface, int i) {
@@ -137,20 +136,40 @@ public class MainActivity extends AppCompatActivity {
                             builder.setPositiveButton("确定", new DialogInterface.OnClickListener() {
                                 @Override
                                 public void onClick(DialogInterface dialogInterface, int i) {
+                                    manager.setClearData();
 
                                 }
                             });
+                            builder.show();
                             break;
                         case 10:
-                            manager.Shutdown();
+                            AlertDialog.Builder builder2 = new AlertDialog.Builder(MainActivity.this);
+                            builder2.setTitle("警告");
+                            builder2.setMessage("确定要恢复出厂设置吗?");
+                            builder2.setNegativeButton("取消", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialogInterface, int i) {
+
+                                }
+                            });
+
+                            builder2.setPositiveButton("确定", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialogInterface, int i) {
+                                    manager.setClearData();
+                                    manager.Shutdown();
+
+                                }
+                            });
+                            builder2.show();
 
                             break;
 
                         default:
                             break;
                     }
-                }else {
-                    Toast.makeText(MainActivity.this,"手环未连接",Toast.LENGTH_SHORT).show();
+                } else {
+                    Toast.makeText(MainActivity.this, "手环未连接", Toast.LENGTH_SHORT).show();
                 }
 
 
@@ -244,7 +263,7 @@ public class MainActivity extends AppCompatActivity {
                 device_address.setText(address);
                 device_name.setText(name);
                 invalidateOptionsMenu();//更新菜单栏
-                Log.d("BluetoothLeService","连上");
+                Log.d("BluetoothLeService", "连上");
 
             } else if (BluetoothLeService.ACTION_GATT_DISCONNECTED.equals(action)) {
                 App.mConnected = false;
@@ -253,7 +272,7 @@ public class MainActivity extends AppCompatActivity {
                 device_name.setText("");
                 invalidateOptionsMenu();//更新菜单栏
                 App.mBluetoothLeService.close();//断开更彻底(没有这一句，在某些机型，重连会连不上)
-                Log.d("BluetoothLeService","断开");
+                Log.d("BluetoothLeService", "断开");
             } else if (BluetoothLeService.ACTION_GATT_SERVICES_DISCOVERED.equals(action)) {
                 // Show all the supported services and characteristics on the user interface.
 //                displayGattServices(mBluetoothLeService.getSupportedGattServices());
@@ -267,34 +286,34 @@ public class MainActivity extends AppCompatActivity {
 
                 List<Integer> datas = DataHandlerUtils.bytesToArrayList(txValue);
 
-                Log.i("zgy",datas.toString());
+                Log.i("zgy", datas.toString());
 
                 //RSSI
                 if (datas.get(4) == 0XB5) {// [171, 0, 4, 255, 181, 128, 72]
                     Integer rssi = datas.get(6);
                     Log.d("zgy", "RSSI" + rssi);
-                    test_result.setText("-"+rssi);
+                    test_result.setText("-" + rssi);
                 }
 
                 //按键测试
                 if (datas.get(4) == 0XB6) {//[171, 0, 4, 255, 182, 128, 0]
                     Integer button = datas.get(6);
-                    if(button==0){
+                    if (button == 0) {
                         test_result.setText("没有按下");
-                    }else if(button==1){
+                    } else if (button == 1) {
                         test_result.setText("按下");
 
                     }
 
                 }
                 //充电 、电量
-                if (datas.get(4)==0X91){//[171, 0, 5, 255, 145, 128, 0, 100]
+                if (datas.get(4) == 0X91) {//[171, 0, 5, 255, 145, 128, 0, 100]
                     Integer integer = datas.get(6);//是否充电
                     Integer integer1 = datas.get(7);//电量多少
-                    if (integer==0){
-                        test_result.setText("未充电  "+"电量:"+integer1+"%");
-                    }else if (integer==1){
-                        test_result.setText("正在充电  "+"电量:"+integer1+"%");
+                    if (integer == 0) {
+                        test_result.setText("未充电  " + "电量:" + integer1 + "%");
+                    } else if (integer == 1) {
+                        test_result.setText("正在充电  " + "电量:" + integer1 + "%");
                     }
                 }
 
@@ -302,19 +321,19 @@ public class MainActivity extends AppCompatActivity {
                 if (datas.get(4) == 0XB3) {//[171, 0, 5, 255, 179, 128, 1, 1]
                     Integer integer1 = datas.get(6);//通信是否正常
                     Integer integer2 = datas.get(7);//初始化是否成功
-                    if (integer1==0){
-                        if (integer2==0){
-                            test_result.setText("通信不正常  "+"初始化不成功");
-                        }else if (integer2==1){
-                            test_result.setText("通信不正常  "+"初始化成功");
+                    if (integer1 == 0) {
+                        if (integer2 == 0) {
+                            test_result.setText("通信不正常  " + "初始化不成功");
+                        } else if (integer2 == 1) {
+                            test_result.setText("通信不正常  " + "初始化成功");
 
                         }
-                    }else if (integer1==1){
-                        if (integer2==0){
-                            test_result.setText("通信正常  "+"初始化不成功");
+                    } else if (integer1 == 1) {
+                        if (integer2 == 0) {
+                            test_result.setText("通信正常  " + "初始化不成功");
 
-                        }else if (integer2==1){
-                            test_result.setText("通信正常  "+"初始化成功");
+                        } else if (integer2 == 1) {
+                            test_result.setText("通信正常  " + "初始化成功");
 
                         }
                     }
@@ -324,17 +343,17 @@ public class MainActivity extends AppCompatActivity {
                 //心率传感器
                 if (datas.get(4) == 0XB4) {//[171, 0, 4, 255, 180, 128, 1]
                     Integer integer = datas.get(6);
-                    if (integer==0){
+                    if (integer == 0) {
                         test_result.setText("通信不正常");
 
-                    }else if (integer==1){
+                    } else if (integer == 1) {
                         test_result.setText("通信正常");
 
                     }
 
                 }
                 //测量心率
-                if (datas.get(4)==0x31){//[171, 0, 5, 255, 49, 10, 0, 190]   [171, 0, 5, 255, 49, 10, 84, 48]
+                if (datas.get(4) == 0x31) {//[171, 0, 5, 255, 49, 10, 0, 190]   [171, 0, 5, 255, 49, 10, 84, 48]
                     Integer integer = datas.get(6);
                     test_result.setText(String.valueOf(integer));
                 }
@@ -403,6 +422,7 @@ public class MainActivity extends AppCompatActivity {
             return convertView;
         }
     }
+
     class ViewHolder {
         TextView text;
     }
