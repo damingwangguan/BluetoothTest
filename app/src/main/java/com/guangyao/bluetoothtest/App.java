@@ -2,6 +2,7 @@ package com.guangyao.bluetoothtest;
 
 import android.app.Application;
 import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.os.IBinder;
@@ -50,7 +51,7 @@ public class App extends Application {
     };
     private void bindBleService() {
         Intent gattServiceIntent = new Intent(this, BluetoothLeService.class);
-        bindService(gattServiceIntent, mServiceConnection, BIND_AUTO_CREATE);
+        bindService(gattServiceIntent, mServiceConnection, Context.BIND_AUTO_CREATE);
     }
 
 
