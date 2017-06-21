@@ -11,6 +11,8 @@ import com.guangyao.bluetoothtest.constans.BleConstans;
 import com.guangyao.bluetoothtest.constans.Constans;
 import com.guangyao.bluetoothtest.utils.DataHandlerUtils;
 
+import java.util.Calendar;
+
 
 public class CommandManager {
     
@@ -315,29 +317,35 @@ public class CommandManager {
         bytes[8] = (byte) (temp >= 0 ? 0 : 1);
         broadcastData(bytes);
     }
-
     /**
-     * 同步时间
+     * 同步时间  ab 00 0b ff 93 80 00 07 e0 0a 0e 09 33 12
      */
     public void setTimeSync() {
         //当前时间
-        DateModel dateModel = new DateModel(System.currentTimeMillis());
-        byte[] bytes = new byte[14];
-        bytes[0] = (byte) 0xAB;
-        bytes[1] = (byte) 0;
-        bytes[2] = (byte) 11;
-        bytes[3] = (byte) 0xff;
-        bytes[4] = (byte) 0x93;
-        bytes[5] = (byte) 0x80;
-//        bytes[6] = (byte)0;//占位符
-        bytes[7] = (byte) ((dateModel.year & 0xff00) >> 8);
-        bytes[8] = (byte) (dateModel.year & 0xff);
-        bytes[9] = (byte) (dateModel.month & 0xff);
-        bytes[10] = (byte) (dateModel.day & 0xff);
-        bytes[11] = (byte) (dateModel.hour & 0xff);
-        bytes[12] = (byte) (dateModel.minute & 0xff);
-        bytes[13] = (byte) (dateModel.second & 0xff);
-        broadcastData(bytes);
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTimeInMillis(System.currentTimeMillis());
+        int year = calendar.get(Calendar.YEAR);
+        int month = calendar.get(Calendar.MONTH) + 1;
+        int day = calendar.get(Calendar.DAY_OF_MONTH);
+        int hour = calendar.get(Calendar.HOUR_OF_DAY);
+        int minute = calendar.get(Calendar.MINUTE);
+        int second = calendar.get(Calendar.SECOND);
+        byte[] data = new byte[14];
+        data[0] = (byte) 0xAB;
+        data[1] = (byte) 0;
+        data[2] = (byte) 11;
+        data[3] = (byte) 0xff;
+        data[4] = (byte) 0x93;
+        data[5] = (byte) 0x80;
+//        data[6] = (byte)0;//占位符
+        data[7] = (byte) ((year & 0xff00) >> 8);
+        data[8] = (byte) (year & 0xff);
+        data[9] = (byte) (month & 0xff);
+        data[10] = (byte) (day & 0xff);
+        data[11] = (byte) (hour & 0xff);
+        data[12] = (byte) (minute & 0xff);
+        data[13] = (byte) (second & 0xff);
+        broadcastData(data);
     }
 
     /**
@@ -586,6 +594,69 @@ public class CommandManager {
         bytes[5] = (byte)0x80;
         broadcastData(bytes);
     }
+
+
+    /**
+     * 中英文切换
+     */
+    public void chineseEnglishSwitch(int control) {
+        byte[] bytes = new byte[7];
+        bytes[0] = (byte) 0xAB;
+        bytes[1] = (byte) 0;
+        bytes[2] = (byte) 4;
+        bytes[3] = (byte) 0xFF;
+        bytes[4] = (byte) 0x7B;
+        bytes[5] = (byte) 0x80;
+        bytes[6] = (byte) control;
+        broadcastData(bytes);
+    }
+
+    /**
+     * 一键测量
+     */
+    public void oneKeyMeasure(int control) {
+        byte[] bytes = new byte[7];
+        bytes[0] = (byte) 0xAB;
+        bytes[1] = (byte) 0;
+        bytes[2] = (byte) 4;
+        bytes[3] = (byte) 0xFF;
+        bytes[4] = (byte) 0x32;
+        bytes[5] = (byte) 0x80;
+        bytes[6] = (byte) control;
+        broadcastData(bytes);
+    }
+
+    /**
+     * 查找手环
+     */
+    public void findBand() {
+        byte[] bytes = new byte[6];
+        bytes[0] = (byte) 0xAB;
+        bytes[1] = (byte) 0;
+        bytes[2] = (byte) 3;
+        bytes[3] = (byte) 0xFF;
+        bytes[4] = (byte) 0x71;
+        bytes[5] = (byte) 0x80;
+        broadcastData(bytes);
+    }
+
+    /**
+     * 跌倒提醒
+     *
+     * @param control
+     */
+    public void falldownWarn(int control) {
+        byte[] bytes = new byte[7];
+        bytes[0] = (byte) 0xAB;
+        bytes[1] = (byte) 0;
+        bytes[2] = (byte) 4;
+        bytes[3] = (byte) 0xFF;
+        bytes[4] = (byte) 0x11;
+        bytes[5] = (byte) 0x80;
+        bytes[6] = (byte) control;//0关闭 1开
+        broadcastData(bytes);
+    }
+
 
     /**
      * @brief Broadcast intent with pointed bytes.
