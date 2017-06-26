@@ -30,4 +30,5 @@
     <string name="oxygen_real_time_measurement">血氧实时测量</string>
     <string name="bp_single_measurement">血压单次测量</string>
     <string name="bp_real_time_measurement">血压实时测量</string>
+    <string name="pull_to_refresh">下拉获取整点数据</string>
 </resources>

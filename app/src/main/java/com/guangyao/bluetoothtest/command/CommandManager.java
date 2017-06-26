@@ -118,14 +118,15 @@ public class CommandManager {
 
     /**
      * 下拉同步数据
-     * @param timeInMillis 同步数据起始时间毫秒值
+     * @param timeInMillis 传入一个时间点，手环传这个时间点之后的整点数据过来
+     * @param timeInMillis2 传入一个时间点，手环传这个时间点之后的运动模式数据过来
      */
-    public void setSyncData(long timeInMillis) {
-        DateModel dateModel = new DateModel(timeInMillis);
-        byte[] data = new byte[12];
+    public void setSyncData(long timeInMillis,long timeInMillis2) {//一个用于获取整点数据，一个用于获取运动模式数据
+        DateModel dateModel = new DateModel(timeInMillis,timeInMillis2);
+        byte[] data = new byte[18];
         data[0] = (byte) 0xAB;
         data[1] = (byte) 0;
-        data[2] = (byte) 9;
+        data[2] = (byte) 15;
         data[3] = (byte) 0xff;
         data[4] = (byte) 0x51;
         data[5] = (byte) 0x80;
@@ -135,6 +136,14 @@ public class CommandManager {
         data[9] = (byte) (dateModel.day);
         data[10] = (byte) (dateModel.hour);
         data[11] = (byte) (dateModel.minute);
+
+        data[12] = (byte) ((dateModel.year2 - 2000)); //获取运动模式数据 需要的
+        data[13] = (byte) (dateModel.month2);
+        data[14] = (byte) (dateModel.day2);
+        data[15] = (byte) (dateModel.hour2);
+        data[16] = (byte) (dateModel.minute2);
+        data[17] = (byte) (dateModel.second2);
+
         broadcastData(data);
     }
 
@@ -142,7 +151,7 @@ public class CommandManager {
      * 下拉同步睡眠数据
      */
     public void setSyncSleepData(long timeInMillis) {
-        DateModel dateModel = new DateModel(timeInMillis);
+        DateModel dateModel = new DateModel(timeInMillis,0);
         byte[] data = new byte[10];
         data[0] = (byte) 0xAB;
         data[1] = (byte) 0;

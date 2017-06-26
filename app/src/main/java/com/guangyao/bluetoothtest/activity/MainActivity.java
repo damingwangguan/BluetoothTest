@@ -164,6 +164,10 @@ public class MainActivity extends AppCompatActivity {
                             builder2.show();
 
                             break;
+                        case 11:
+                           manager.setSyncData(System.currentTimeMillis() - 7 * 24 * 60 * 60 * 1000, System.currentTimeMillis() - 7 * 24 * 60 * 60 * 1000);
+
+                            break;
 
                         default:
                             break;
@@ -376,6 +380,7 @@ public class MainActivity extends AppCompatActivity {
         list.add(getString(R.string.heart_test));
         list.add(getString(R.string.clear_data));
         list.add(getString(R.string.restore));
+        list.add(getString(R.string.pull_to_refresh));
 //        list.add(getString(R.string.hr_single_measurement));
 //        list.add(getString(R.string.hr_real_time_measurement));
 //        list.add(getString(R.string.oxygen_single_measurement));
